@@ -11,13 +11,13 @@
 %define rust_use_bootstrap 1
 %define bootstrap_arches i486
 
-%global bootstrap_rust 1.44.0
-%global bootstrap_cargo 1.44.0
+%global bootstrap_rust 1.50.0
+%global bootstrap_cargo 1.50.0
 
 # Only x86_64 and i686 are Tier 1 platforms at this time.
 # https://forge.rust-lang.org/platform-support.html
 
-%global rust_version 1.44.0
+%global rust_version 1.51.0
 
 %ifarch %ix86
 %define xbuildjobs %{nil}
@@ -53,7 +53,7 @@ URL:            https://www.rust-lang.org
 
 %global rustc_package rustc-%{rust_version}-src
 Source0:        rustc-%{rust_version}-src.tar.gz
-Source100:      rust-%{rust_version}-i686-unknown-linux-gnu.tar.gz
+Source100:      rust-%{bootstrap_rust}-i686-unknown-linux-gnu.tar.gz
 Source200:      README.md
 
 Patch1: 0001-Use-a-non-existent-test-path-instead-of-clobbering-d.patch
@@ -67,9 +67,9 @@ Patch6: 0006-Provide-ENV-controls-to-bypass-some-sb2-calls-betwee.patch
 
 #SFOS : our rust_use_bootstrap puts them into /usr
 %if 0%{?rust_use_bootstrap}
-%global bootstrap_root rust-%{rust_version}-%{rust_x86_triple}
+%global bootstrap_root rust-%{bootstrap_rust}-%{rust_x86_triple}
 %global local_rust_root %{_builddir}/%{bootstrap_root}/usr
-%global bootstrap_source rust-%{rust_version}-%{rust_x86_triple}.tar.gz
+%global bootstrap_source rust-%{bootstrap_rust}-%{rust_x86_triple}.tar.gz
 %else
 %global local_rust_root /usr
 BuildRequires:  cargo >= %{bootstrap_cargo}
@@ -211,21 +211,21 @@ and ensure that you'll always get a repeatable build.
 %prep
 #SFOS : our rust_use_bootstrap puts them into /usr
 %if 0%{?rust_use_bootstrap}
-%setup -q -n %{bootstrap_root} -T -b 100
+%setup -n %{bootstrap_root} -T -b 100
 ./install.sh --components=cargo,rustc,rust-std-%{rust_x86_triple} \
   --prefix=%{local_rust_root} --disable-ldconfig
 test -f '%{local_rust_root}/bin/cargo'
 test -f '%{local_rust_root}/bin/rustc'
 %endif
 
-%setup -q -n %{rustc_package}
+%setup -n %{rustc_package}
 
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
-%patch6 -p1
+# %patch1 -p1
+# %patch2 -p1
+# %patch3 -p1
+# %patch4 -p1
+# %patch5 -p1
+# %patch6 -p1
 
 sed -i.try-py3 -e '/try python2.7/i try python3 "$@"' ./configure
 
@@ -248,12 +248,12 @@ rm -rf vendor/openssl-src/openssl/
 sed -i.lzma -e '/LZMA_API_STATIC/d' src/bootstrap/tool.rs
 
 # rename bundled license for packaging
-cp -a vendor/backtrace-sys/src/libbacktrace/LICENSE{,-libbacktrace}
+# cp -a vendor/backtrace-sys/src/libbacktrace/LICENSE{,-libbacktrace}
 
 # Static linking to distro LLVM needs to add -lffi
 # https://github.com/rust-lang/rust/issues/34486
-sed -i.ffi -e '$a #[link(name = "ffi")] extern {}' \
-  src/librustc_llvm/lib.rs
+#sed -i.ffi -e '$a #[link(name = "ffi")] extern {}' \
+#  src/librustc_llvm/lib.rs
 
 # The configure macro will modify some autoconf-related files, which upsets
 # cargo when it tries to verify checksums in those files.  If we just truncate
