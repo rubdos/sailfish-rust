@@ -11,8 +11,8 @@
 %define rust_use_bootstrap 1
 %define bootstrap_arches i486
 
-%global bootstrap_rust 1.50.0
-%global bootstrap_cargo 1.50.0
+%global bootstrap_rust 1.51.0
+%global bootstrap_cargo 1.51.0
 
 # Only x86_64 and i686 are Tier 1 platforms at this time.
 # https://forge.rust-lang.org/platform-support.html
@@ -62,6 +62,8 @@ Patch3: 0003-Disable-statx-for-all-builds.-JB-50106.patch
 Patch4: 0004-Scratchbox2-needs-to-be-able-to-tell-rustc-the-defau.patch
 Patch5: 0005-Cargo-Force-the-target-when-building-for-CompileKind-Host.patch
 Patch6: 0006-Provide-ENV-controls-to-bypass-some-sb2-calls-betwee.patch
+
+Patch101: 81910.patch
 # This is the real rustc spec - the stub one appears near the end.
 %ifarch %ix86
 
@@ -226,6 +228,8 @@ test -f '%{local_rust_root}/bin/rustc'
 # %patch4 -p1
 # %patch5 -p1
 # %patch6 -p1
+
+%patch101 -p1
 
 sed -i.try-py3 -e '/try python2.7/i try python3 "$@"' ./configure
 
