@@ -15,13 +15,13 @@ that gracefully without issues thanks to rust's type system.
 Signed-off-by: Tomi Leppänen <tomi.leppanen@jolla.com
 Signed-off-by: Matti Kosola <matti.kosola@jolla.com>
 ---
- src/libstd/sys/unix/fs.rs | 15 ++-------------
+ library/std/src/sys/unix/fs.rs | 15 ++-------------
  1 file changed, 2 insertions(+), 13 deletions(-)
 
-diff --git a/src/libstd/sys/unix/fs.rs b/src/libstd/sys/unix/fs.rs
+diff --git a/library/std/src/sys/unix/fs.rs b/library/std/src/sys/unix/fs.rs
 index a233aa47dff..45fb192fc8c 100644
---- a/src/libstd/sys/unix/fs.rs
-+++ b/src/libstd/sys/unix/fs.rs
+--- a/library/std/src/sys/unix/fs.rs
++++ b/library/std/src/sys/unix/fs.rs
 @@ -58,20 +58,9 @@ pub struct File(FileDesc);
  // https://github.com/rust-lang/rust/pull/67774
  macro_rules! cfg_has_statx {
