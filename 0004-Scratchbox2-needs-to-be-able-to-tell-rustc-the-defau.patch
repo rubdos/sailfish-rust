@@ -10,24 +10,24 @@ allows the same rustc binary to be used for all builds.
 
 Signed-off-by: David Greaves <david.greaves@jolla.com>
 ---
- src/librustc_session/config.rs | 9 ++++++++-
+ compiler/rustc_session/src/config.rs | 9 ++++++++-
  1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/src/librustc_session/config.rs b/src/librustc_session/config.rs
+diff --git a/compiler/rustc_session/src/config.rs b/compiler/rustc_session/src/config.rs
 index 2513cfa73e5..529d836dc82 100644
---- a/src/librustc_session/config.rs
-+++ b/src/librustc_session/config.rs
-@@ -1363,7 +1363,14 @@ fn parse_target_triple(matches: &getopts::Matches, error_format: ErrorOutputType
+--- a/compiler/rustc_session/src/config.rs
++++ b/compiler/rustc_session/src/config.rs
+@@ -1488,7 +1488,14 @@ fn parse_target_triple(matches: &getopts::Matches, error_format: ErrorOutputType
              })
          }
-         Some(target) => TargetTriple::TargetTriple(target),
+         Some(target) => TargetTriple::from_alias(target),
 -        _ => TargetTriple::from_triple(host_triple()),
 +	// In SFOS we use SB2 and need to tell rust what the
 +        // 'default' target is. If the SB2_RUST_TARGET_TRIPLE
 +        // environment variable is set then it is used. Otherwise
 +        // the fallback is the host_triple as usual
 +        _ => match std::env::var("SB2_RUST_TARGET_TRIPLE") {
-+            Ok(tgt) => TargetTriple::TargetTriple(tgt),
++            Ok(tgt) => TargetTriple::from_alias(tgt),
 +            Err(_) => TargetTriple::from_triple(host_triple()),
 +	}
      }
