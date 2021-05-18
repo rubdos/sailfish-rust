@@ -223,11 +223,11 @@ test -f '%{local_rust_root}/bin/rustc'
 %setup -n %{rustc_package}
 
 # %patch1 -p1
-# %patch2 -p1
+%patch2 -p1
 # %patch3 -p1
-# %patch4 -p1
-# %patch5 -p1
-# %patch6 -p1
+%patch4 -p1
+%patch5 -p1
+%patch6 -p1
 
 %patch101 -p1
 
@@ -256,8 +256,8 @@ sed -i.lzma -e '/LZMA_API_STATIC/d' src/bootstrap/tool.rs
 
 # Static linking to distro LLVM needs to add -lffi
 # https://github.com/rust-lang/rust/issues/34486
-#sed -i.ffi -e '$a #[link(name = "ffi")] extern {}' \
-#  src/librustc_llvm/lib.rs
+sed -i.ffi -e '$a #[link(name = "ffi")] extern {}' \
+  compiler/rustc_llvm/src/lib.rs
 
 # The configure macro will modify some autoconf-related files, which upsets
 # cargo when it tries to verify checksums in those files.  If we just truncate
@@ -354,6 +354,7 @@ export RUSTFLAGS="%{rustflags}"
 CFLAGS=
 CXXFLAGS=
 FFLAGS=
+PATH=/opt/cross/bin/:$PATH
 
 DESTDIR=%{buildroot} %{python} ./x.py install
 
@@ -408,8 +409,11 @@ mkdir -p %{buildroot}%{_datadir}/cargo/registry
 
 %if %without lldb
 rm -f %{buildroot}%{_bindir}/rust-lldb
-rm -f %{buildroot}%{rustlibdir}/etc/lldb_*.py*
+rm -f %{buildroot}%{rustlibdir}/etc/lldb_*
 %endif
+
+# We don't want Rust copies of LLVM tools (rust-lld, rust-llvm-dwp)
+rm -f %{buildroot}%{rustlibdir}/%{rust_x86_triple}/bin/rust-ll*
 
 # Remove unwanted documentation files
 rm -f %{buildroot}%{_bindir}/rustdoc
@@ -434,7 +438,7 @@ rm -fr %{buildroot}%{_mandir}/man1
 
 %files
 %license COPYRIGHT LICENSE-APACHE LICENSE-MIT
-%license vendor/backtrace-sys/src/libbacktrace/LICENSE-libbacktrace
+# %license vendor/backtrace-sys/src/libbacktrace/LICENSE-libbacktrace
 %doc README.md
 %{_bindir}/rustc
 %{_libdir}/*.so
@@ -468,6 +472,7 @@ rm -fr %{buildroot}%{_mandir}/man1
 %license src/tools/cargo/LICENSE-APACHE src/tools/cargo/LICENSE-MIT src/tools/cargo/LICENSE-THIRD-PARTY
 %doc src/tools/cargo/README.md
 %{_bindir}/cargo
+%{_libexecdir}/cargo*
 %{_sysconfdir}/bash_completion.d/cargo
 %{_datadir}/zsh/site-functions/_cargo
 %dir %{_datadir}/cargo
@@ -477,19 +482,18 @@ rm -fr %{buildroot}%{_mandir}/man1
 %files debugger-common
 %dir %{rustlibdir}
 %dir %{rustlibdir}/etc
-%{rustlibdir}/etc/debugger_*.py*
-
+%{rustlibdir}/etc/rust_*.py*
 
 %files gdb
 %{_bindir}/rust-gdb
-%{rustlibdir}/etc/gdb_*.py*
+%{rustlibdir}/etc/gdb_*
 %exclude %{_bindir}/rust-gdbgui
 
 
 %if %with lldb
 %files lldb
 %{_bindir}/rust-lldb
-%{rustlibdir}/etc/lldb_*.py*
+%{rustlibdir}/etc/lldb_*
 %endif
 
 # This is the non x86 spec to produce dummy rust/cargo binaries
