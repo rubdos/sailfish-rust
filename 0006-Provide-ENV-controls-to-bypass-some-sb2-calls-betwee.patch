@@ -42,7 +42,7 @@ diff --git a/library/std/src/sys/unix/process/process_common.rs b/library/std/sr
 index 859da691ad2..ee5e776efac 100644
 --- a/library/std/src/sys/unix/process/process_common.rs
 +++ b/library/std/src/sys/unix/process/process_common.rs
-@@ -71,10 +71,16 @@ pub struct Command {
+@@ -71,10 +71,17 @@ pub struct Command {
      // located. Whenever we add a key we update it in place if it's already
      // present, and whenever we remove a key we update the locations of all
      // other keys.
@@ -57,10 +57,11 @@ index 859da691ad2..ee5e776efac 100644
 +    pub(crate) chdir: Option<ChdirFn>,
 +    pub(crate) setuid: Option<SetuidFn>,
 +    pub(crate) setgid: Option<SetgidFn>,
++    pub(crate) setgroups: Option<SetgroupsFn>,
  
      cwd: Option<CString>,
      uid: Option<uid_t>,
-@@ -86,6 +92,13 @@ pub struct Command {
+@@ -86,6 +92,14 @@ pub struct Command {
      stderr: Option<Stdio>,
  }
  
@@ -70,11 +71,12 @@ index 859da691ad2..ee5e776efac 100644
 +pub(crate) type ChdirFn = fn(*const c_char)->c_int;
 +pub(crate) type SetuidFn = fn(uid_t)->c_int;
 +pub(crate) type SetgidFn = fn(gid_t)->c_int;
++pub(crate) type SetgroupsFn = fn(libc::size_t, *const gid_t)->c_int;
 +    
  // Create a new type for argv, so that we can make it `Send` and `Sync`
  struct Argv(Vec<*const c_char>);
  
-@@ -130,15 +143,22 @@ impl Command {
+@@ -130,15 +143,23 @@ impl Command {
      pub fn new(program: &OsStr) -> Command {
          let mut saw_nul = false;
          let program = os2c(program, &mut saw_nul);
@@ -93,6 +95,7 @@ index 859da691ad2..ee5e776efac 100644
 +	    chdir: None,
 +	    setuid: None,
 +	    setgid: None,
++	    setgroups: None,
              cwd: None,
              uid: None,
              gid: None,
@@ -134,7 +137,7 @@ index f389c60615f..d5763b8aa1a 100644
  
  ////////////////////////////////////////////////////////////////////////////////
  // Command
-@@ -35,6 +41,70 @@ impl Command {
+@@ -35,6 +41,74 @@ impl Command {
  
          let (input, output) = sys::pipe::anon_pipe()?;
  
@@ -196,6 +199,10 @@ index f389c60615f..d5763b8aa1a 100644
 +		      "setgid\0".as_ptr() as *const c_char) as *const ();
 +		self.setgid = Some(
 +		    transmute::<*const (), SetgidFn>(real_setgid_p) );
++		let real_setgroups_p = dlsym(libc_h,
++		      "setgroups\0".as_ptr() as *const c_char) as *const ();
++		self.setgroups = Some(
++		    transmute::<*const (), SetgroupsFn>(real_setgroups_p) );
 +	    },
 +	    None => {}
 +	};
@@ -255,7 +262,7 @@ index f389c60615f..d5763b8aa1a 100644
 +	    None => { unsafe { libc::setgid(gid) } }
 +	}
 +    }
-+    fn unwrap_setgroups(&self, ngroups: size_t, gid: *const gid_t) -> c_int {
++    fn unwrap_setgroups(&self, ngroups: libc::size_t, gid: *const gid_t) -> c_int {
 +	match self.setgroups {
 +	    Some(real_setgroups) => { (real_setgroups)(ngroups, gid) },
 +	    None => { unsafe { libc::setgroups(ngroups, gid) } }
@@ -299,7 +306,7 @@ index f389c60615f..d5763b8aa1a 100644
                  #[cfg(not(target_os = "redox"))]
                  if libc::getuid() == 0 && self.get_groups().is_none() {
 -                    cvt(libc::setgroups(0, ptr::null()))?;
-+                    cvt(self.unwrap_setgroups(0, ptr::null()))
++                    cvt(self.unwrap_setgroups(0, ptr::null()))?;
                  }
 -                cvt(libc::setuid(u as uid_t))?;
 +                cvt(self.unwrap_setuid(u as uid_t))?;
