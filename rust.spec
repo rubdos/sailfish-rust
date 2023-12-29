@@ -273,7 +273,7 @@ rm -rf vendor/lzma-sys/xz-*/
 rm -rf vendor/openssl-src/openssl/
 
 # This only affects the transient rust-installer, but let it use our dynamic xz-libs
-sed -i.lzma -e '/LZMA_API_STATIC/d' src/bootstrap/tool.rs
+sed -i.lzma -e '/LZMA_API_STATIC/d' src/bootstrap/src/core/build_steps/tool.rs
 
 # The configure macro will modify some autoconf-related files, which upsets
 # cargo when it tries to verify checksums in those files.  If we just truncate
