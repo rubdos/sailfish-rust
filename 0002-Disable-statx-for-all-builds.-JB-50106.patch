@@ -20,7 +20,7 @@ Signed-off-by: Ruben De Smet <ruben.de.smet@rubdos.be>
  1 file changed, 2 insertions(+), 30 deletions(-)
 
 diff --git a/library/std/src/sys/unix/fs.rs b/library/std/src/sys/unix/fs.rs
-index a5604c92a80..8438d7dcc30 100644
+index 40eb910fdc3..8798aa7061c 100644
 --- a/library/std/src/sys/unix/fs.rs
 +++ b/library/std/src/sys/unix/fs.rs
 @@ -17,28 +17,11 @@
@@ -49,10 +49,10 @@ index a5604c92a80..8438d7dcc30 100644
 -    all(target_os = "linux", target_env = "gnu")
 -))]
 -use libc::c_char;
- #[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android"))]
- use libc::dirfd;
- #[cfg(any(target_os = "linux", target_os = "emscripten"))]
-@@ -98,20 +81,9 @@
+ #[cfg(any(
+     all(target_os = "linux", not(target_env = "musl")),
+     target_os = "emscripten",
+@@ -117,20 +100,9 @@
  // https://github.com/rust-lang/rust/pull/67774
  macro_rules! cfg_has_statx {
      ({ $($then_tt:tt)* } else { $($else_tt:tt)* }) => {
@@ -76,5 +76,5 @@ index a5604c92a80..8438d7dcc30 100644
  
  cfg_has_statx! {{
 -- 
-2.42.0
+2.43.0
 

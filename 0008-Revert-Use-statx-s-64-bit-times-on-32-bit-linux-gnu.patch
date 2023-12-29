@@ -13,10 +13,10 @@ This reverts commit fec4818fdb40c82679f57fa7f26fcddc1a874c13.
  3 files changed, 42 insertions(+), 89 deletions(-)
 
 diff --git a/library/std/src/os/linux/fs.rs b/library/std/src/os/linux/fs.rs
-index 479bbcc17a8..2e90d8d6be7 100644
+index ab0b2a3eda3..4ac9ae4fd04 100644
 --- a/library/std/src/os/linux/fs.rs
 +++ b/library/std/src/os/linux/fs.rs
-@@ -356,34 +356,19 @@ fn st_size(&self) -> u64 {
+@@ -363,34 +363,19 @@ fn st_size(&self) -> u64 {
          self.as_inner().as_inner().st_size as u64
      }
      fn st_atime(&self) -> i64 {
@@ -55,10 +55,10 @@ index 479bbcc17a8..2e90d8d6be7 100644
      fn st_ctime_nsec(&self) -> i64 {
          self.as_inner().as_inner().st_ctime_nsec as i64
 diff --git a/library/std/src/sys/unix/fs.rs b/library/std/src/sys/unix/fs.rs
-index 8438d7dcc30..c5ca8582f88 100644
+index 8798aa7061c..1d92664b2e1 100644
 --- a/library/std/src/sys/unix/fs.rs
 +++ b/library/std/src/sys/unix/fs.rs
-@@ -98,19 +98,10 @@ struct StatxExtraFields {
+@@ -117,19 +117,10 @@ struct StatxExtraFields {
          // This is needed to check if btime is supported by the filesystem.
          stx_mask: u32,
          stx_btime: libc::statx_timestamp,
@@ -80,7 +80,7 @@ index 8438d7dcc30..c5ca8582f88 100644
      unsafe fn try_statx(
          fd: c_int,
          path: *const c_char,
-@@ -200,13 +191,6 @@ fn statx(
+@@ -219,13 +210,6 @@ fn statx(
          let extra = StatxExtraFields {
              stx_mask: buf.stx_mask,
              stx_btime: buf.stx_btime,
@@ -94,7 +94,7 @@ index 8438d7dcc30..c5ca8582f88 100644
          };
  
          Some(Ok(FileAttr { stat, statx_extra_fields: Some(extra) }))
-@@ -354,36 +338,6 @@ impl FileAttr {
+@@ -380,36 +364,6 @@ impl FileAttr {
          fn from_stat64(stat: stat64) -> Self {
              Self { stat, statx_extra_fields: None }
          }
@@ -131,7 +131,7 @@ index 8438d7dcc30..c5ca8582f88 100644
      }
  } else {
      impl FileAttr {
-@@ -409,15 +363,24 @@ pub fn file_type(&self) -> FileType {
+@@ -435,15 +389,24 @@ pub fn file_type(&self) -> FileType {
  #[cfg(target_os = "netbsd")]
  impl FileAttr {
      pub fn modified(&self) -> io::Result<SystemTime> {
@@ -159,8 +159,8 @@ index 8438d7dcc30..c5ca8582f88 100644
      }
  }
  
-@@ -430,19 +393,18 @@ impl FileAttr {
-         target_os = "vita"
+@@ -472,19 +435,18 @@ impl FileAttr {
+         target_os = "hurd",
      )))]
      pub fn modified(&self) -> io::Result<SystemTime> {
 -        #[cfg(target_pointer_width = "32")]
@@ -186,9 +186,9 @@ index 8438d7dcc30..c5ca8582f88 100644
 +        }))
      }
  
-     #[cfg(target_os = "horizon")]
-@@ -457,19 +419,18 @@ pub fn modified(&self) -> io::Result<SystemTime> {
-         target_os = "vita"
+     #[cfg(any(target_os = "horizon", target_os = "hurd"))]
+@@ -500,19 +462,18 @@ pub fn modified(&self) -> io::Result<SystemTime> {
+         target_os = "hurd",
      )))]
      pub fn accessed(&self) -> io::Result<SystemTime> {
 -        #[cfg(target_pointer_width = "32")]
@@ -214,8 +214,8 @@ index 8438d7dcc30..c5ca8582f88 100644
 +        }))
      }
  
-     #[cfg(target_os = "horizon")]
-@@ -486,7 +447,10 @@ pub fn accessed(&self) -> io::Result<SystemTime> {
+     #[cfg(any(target_os = "horizon", target_os = "hurd"))]
+@@ -529,7 +490,10 @@ pub fn accessed(&self) -> io::Result<SystemTime> {
          target_os = "watchos",
      ))]
      pub fn created(&self) -> io::Result<SystemTime> {
@@ -227,7 +227,7 @@ index 8438d7dcc30..c5ca8582f88 100644
      }
  
      #[cfg(not(any(
-@@ -502,7 +466,10 @@ pub fn created(&self) -> io::Result<SystemTime> {
+@@ -545,7 +509,10 @@ pub fn created(&self) -> io::Result<SystemTime> {
          cfg_has_statx! {
              if let Some(ext) = &self.statx_extra_fields {
                  return if (ext.stx_mask & libc::STATX_BTIME) != 0 {
@@ -240,17 +240,17 @@ index 8438d7dcc30..c5ca8582f88 100644
                      Err(io::const_io_error!(
                          io::ErrorKind::Uncategorized,
 diff --git a/library/std/src/sys/unix/time.rs b/library/std/src/sys/unix/time.rs
-index 17b4130c202..4e8dd9a86e7 100644
+index f2e86a4fb2b..fee9e07ec01 100644
 --- a/library/std/src/sys/unix/time.rs
 +++ b/library/std/src/sys/unix/time.rs
-@@ -36,6 +36,7 @@ pub(in crate::sys::unix) struct Timespec {
+@@ -34,6 +34,7 @@ pub(in crate::sys::unix) struct Timespec {
  
  impl SystemTime {
-     #[cfg_attr(target_os = "horizon", allow(unused))]
+     #[cfg_attr(any(target_os = "horizon", target_os = "hurd"), allow(unused))]
 +    #[cfg_attr(target_env = "gnu", allow(dead_code))]
      pub fn new(tv_sec: i64, tv_nsec: i64) -> SystemTime {
          SystemTime { t: Timespec::new(tv_sec, tv_nsec) }
      }
 -- 
-2.42.0
+2.43.0
 
