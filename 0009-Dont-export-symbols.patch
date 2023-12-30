@@ -1,0 +1,29 @@
+diff --git a/compiler/rustc_codegen_ssa/src/back/link.rs b/compiler/rustc_codegen_ssa/src/back/link.rs
+index dd9d277..04d1a21 100644
+--- a/compiler/rustc_codegen_ssa/src/back/link.rs
++++ b/compiler/rustc_codegen_ssa/src/back/link.rs
+@@ -1904,6 +1904,10 @@ fn add_linked_symbol_object(
+         return;
+     };
+
++    if std::env::var("SB2_RUST_TARGET_TRIPLE").is_ok() {
++        return;
++    }
++
+     if file.format() == object::BinaryFormat::Coff {
+         // NOTE(nbdd0121): MSVC will hang if the input object file contains no sections,
+         // so add an empty section.
+diff --git a/compiler/rustc_codegen_ssa/src/back/linker.rs b/compiler/rustc_codegen_ssa/src/back/linker.rs
+index 0943451..1e14c79 100644
+--- a/compiler/rustc_codegen_ssa/src/back/linker.rs
++++ b/compiler/rustc_codegen_ssa/src/back/linker.rs
+@@ -669,6 +669,10 @@ impl<'a> Linker for GccLinker<'a> {
+             return;
+         }
+
++        if std::env::var("SB2_RUST_TARGET_TRIPLE").is_ok() {
++            return;
++        }
++
+         let is_windows = self.sess.target.is_like_windows;
+         let path = tmpdir.join(if is_windows { "list.def" } else { "list" });
