@@ -36,14 +36,3 @@ index dd9d277fb..160e472cf 100644
              let output = out_filename(
                  sess,
                  crate_type,
-@@ -1904,6 +1917,10 @@ fn add_linked_symbol_object(
-         return;
-     };
- 
-+    if std::env::var("SB2_RUST_TARGET_TRIPLE").is_ok() {
-+        return;
-+    }
-+
-     if file.format() == object::BinaryFormat::Coff {
-         // NOTE(nbdd0121): MSVC will hang if the input object file contains no sections,
-         // so add an empty section.
