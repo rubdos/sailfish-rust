@@ -70,13 +70,10 @@ Source100:      rust-%{rust_version}-i686-unknown-linux-gnu.tar.gz
 Source200:      README.md
 
 Patch1: 0001-Set-proper-llvm-targets.patch
-Patch2: 0002-Disable-statx-for-all-builds.-JB-50106.patch
 Patch3: 0003-Scratchbox2-needs-to-be-able-to-tell-rustc-the-defau.patch
 Patch4: 0004-Force-the-target-when-building-for-CompileKind-Host.patch
 Patch5: 0005-Provide-ENV-controls-to-bypass-some-sb2-calls-betwee.patch
 Patch6: 0006-Scratchbox2-needs-to-be-able-to-tell-cargo-the-defau.patch
-Patch7: 0007-Disable-aarch64-outline-atomics-for-now.patch
-Patch8: 0008-Revert-Use-statx-s-64-bit-times-on-32-bit-linux-gnu.patch
 Patch9: 0009-Relocate-unset-tmp.patch
 # This is the real rustc spec - the stub one appears near the end.
 %ifarch %ix86
